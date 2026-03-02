@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "exokern-eval"
+version = "0.1.0"
+description = "Policy Report Card generator for contact-rich manipulation skills"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.10"
+authors = [
+    {name = "EXOKERN", email = "info@exokern.com"},
+]
+keywords = ["robotics", "evaluation", "force-torque", "manipulation", "isaac-lab"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "torch>=2.0",
+    "numpy>=1.24",
+    "jinja2>=3.1",
+]
+
+[project.optional-dependencies]
+isaaclab = [
+    "isaacsim-rl",
+]
+dev = [
+    "pytest",
+    "ruff",
+]
+
+[project.scripts]
+exokern-eval = "exokern_eval.cli:main"
+
+[project.urls]
+Homepage = "https://exokern.com"
+Repository = "https://github.com/MichaelLud1AI/exokern_eval"
+HuggingFace = "https://huggingface.co/EXOKERN"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
