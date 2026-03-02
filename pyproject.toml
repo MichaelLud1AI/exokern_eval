@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "exokern-eval"
-version = "0.1.2"
+version = "0.1.3"
 description = "Policy Report Card generator for contact-rich manipulation skills"
 readme = "README.md"
 license = {text = "Apache-2.0"}
@@ -40,7 +40,7 @@ exokern-eval = "exokern_eval.cli:main"
 
 [project.urls]
 Homepage = "https://exokern.com"
-Repository = "https://github.com/MichaelLud1AI/exokern_eval"
+Repository = "https://github.com/Exokern/exokern_eval"
 HuggingFace = "https://huggingface.co/EXOKERN"
 
 [tool.setuptools.packages.find]

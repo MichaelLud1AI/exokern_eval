@@ -45,7 +45,7 @@ pip install exokern-eval[isaaclab]
 
 **From source:**
 ```bash
-git clone https://github.com/MichaelLud1AI/exokern_eval.git
+git clone https://github.com/Exokern/exokern_eval.git
 cd exokern_eval
 pip install -e ".[dev]"
 ```
