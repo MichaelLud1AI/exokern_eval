@@ -10,6 +10,8 @@ from pathlib import Path
 import torch
 
 from exokern_eval import __version__
+from typing import Optional
+
 from exokern_eval.baselines import get_baseline
 from exokern_eval.evaluator import EvalResults, create_env, run_rollouts
 from exokern_eval.loader import load_policy
@@ -24,7 +26,7 @@ BANNER = f"""\
 """
 
 
-def _print_table(results: EvalResults, baseline: dict | None) -> None:
+def _print_table(results: EvalResults, baseline: Optional[dict]) -> None:
     """Print a compact results table to stdout."""
     print()
     print("  ┌─────────────────────┬────────────────┐")
@@ -51,7 +53,7 @@ def _print_table(results: EvalResults, baseline: dict | None) -> None:
     print()
 
 
-def main(argv: list[str] | None = None) -> int:
+def main(argv: Optional[list[str]] = None) -> int:
     parser = argparse.ArgumentParser(
         prog="exokern-eval",
         description="Generate a Policy Report Card by evaluating a checkpoint in Isaac Lab.",

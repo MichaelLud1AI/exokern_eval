@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 from pathlib import Path
-from typing import Any
+from typing import Any, Union
 
 import torch
 import torch.nn as nn
@@ -205,7 +205,7 @@ class DDIMSampler:
         return x
 
 
-def load_policy(checkpoint_path: str | Path, device: torch.device) -> dict[str, Any]:
+def load_policy(checkpoint_path: Union[str, Path], device: torch.device) -> dict[str, Any]:
     """Load a trained policy checkpoint and return all components needed for evaluation."""
     ckpt = torch.load(checkpoint_path, map_location=device, weights_only=False)
 

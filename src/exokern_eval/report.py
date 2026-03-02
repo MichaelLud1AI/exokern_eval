@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import json
 from datetime import datetime, timezone
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional, Union
 
 from jinja2 import Environment, BaseLoader
 
@@ -197,8 +198,8 @@ def generate_report(
     env_name: str,
     obs_dim: int,
     action_dim: int,
-    baseline: dict[str, Any] | None = None,
-    output_path: str | Path = "report.html",
+    baseline: Optional[dict[str, Any]] = None,
+    output_path: Union[str, Path] = "report.html",
 ) -> Path:
     """Render an HTML report card and write it to disk."""
     from exokern_eval import __version__
@@ -251,8 +252,8 @@ def generate_report(
 def generate_json_report(
     results: EvalResults,
     env_name: str,
-    baseline: dict[str, Any] | None = None,
-    output_path: str | Path = "report.json",
+    baseline: Optional[dict[str, Any]] = None,
+    output_path: Union[str, Path] = "report.json",
 ) -> Path:
     """Write a machine-readable JSON report."""
     data = {

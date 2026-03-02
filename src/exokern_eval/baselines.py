@@ -1,4 +1,5 @@
 """Built-in EXOKERN baseline results for comparison."""
+from typing import Optional
 
 BASELINES = {
     "PegInsert": {
@@ -24,7 +25,7 @@ BASELINES = {
 }
 
 
-def get_baseline(env_name: str, condition: str = "full_ft") -> dict | None:
+def get_baseline(env_name: str, condition: str = "full_ft") -> Optional[dict]:
     """Look up the EXOKERN baseline for a given environment."""
     for key, entry in BASELINES.items():
         if entry["env"] == env_name or key.lower() in env_name.lower():
