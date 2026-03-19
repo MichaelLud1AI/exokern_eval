@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 from datetime import datetime, timezone
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional, Union
 
@@ -66,8 +65,34 @@ REPORT_TEMPLATE = """\
 <div class="container">
 
 <h1>EXOKERN Policy Report Card</h1>
-<p class="subtitle">Generated {{ timestamp }} &mdash; {{ n_episodes }} episodes evaluated</p>
+<p class="subtitle">
+  Generated {{ timestamp }}
+  {% if mode == "offline" %}
+    &mdash; offline checkpoint summary
+  {% else %}
+    &mdash; {{ n_episodes }} episodes evaluated
+  {% endif %}
+</p>
 
+{% if mode == "offline" %}
+<div class="card">
+  <h2>Checkpoint Summary</h2>
+  <table>
+    <tr><td>Mode</td><td>Checkpoint metadata only</td></tr>
+    <tr><td>Condition</td><td>{{ checkpoint.condition }}</td></tr>
+    <tr><td>Observation Dim</td><td>{{ checkpoint.obs_dim }}</td></tr>
+    <tr><td>Action Dim</td><td>{{ checkpoint.action_dim }}</td></tr>
+    <tr><td>Validation Loss</td><td>{{ checkpoint.val_loss if checkpoint.val_loss is not none else "n/a" }}</td></tr>
+  </table>
+</div>
+
+<div class="card">
+  <h2>Rollouts</h2>
+  <p class="subtitle" style="margin-bottom: 0;">
+    Isaac Lab rollouts were not executed in offline mode, so success, force, and timing metrics are unavailable.
+  </p>
+</div>
+{% else %}
 <div class="card">
   <h2>Summary</h2>
   <div class="metrics">
@@ -155,6 +180,7 @@ REPORT_TEMPLATE = """\
   </div>
 </div>
 {% endif %}
+{% endif %}
 
 <div class="card">
   <h2>Environment</h2>
@@ -200,6 +226,7 @@ def generate_report(
     action_dim: int,
     baseline: Optional[dict[str, Any]] = None,
     output_path: Union[str, Path] = "report.html",
+    metadata: Optional[dict[str, Any]] = None,
 ) -> Path:
     """Render an HTML report card and write it to disk."""
     from exokern_eval import __version__
@@ -229,6 +256,8 @@ def generate_report(
         "obs_dim": obs_dim,
         "action_dim": action_dim,
         "baseline": None,
+        "mode": metadata["mode"] if metadata else "rollout",
+        "checkpoint": metadata.get("checkpoint", {}) if metadata else {},
     }
 
     if baseline:
@@ -254,15 +283,20 @@ def generate_json_report(
     env_name: str,
     baseline: Optional[dict[str, Any]] = None,
     output_path: Union[str, Path] = "report.json",
+    metadata: Optional[dict[str, Any]] = None,
 ) -> Path:
     """Write a machine-readable JSON report."""
     data = {
         "tool": "exokern-eval",
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "env": env_name,
-        "results": results.to_dict(),
+        "mode": metadata["mode"] if metadata else "rollout",
     }
-    if baseline:
+    if metadata and metadata.get("checkpoint"):
+        data["checkpoint"] = metadata["checkpoint"]
+    if not metadata or metadata.get("mode") != "offline":
+        data["results"] = results.to_dict()
+    if baseline and (not metadata or metadata.get("mode") != "offline"):
         data["baseline"] = baseline
         data["delta"] = {
             "success_rate": round(results.success_rate - baseline["success_rate"], 1),

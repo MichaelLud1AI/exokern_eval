@@ -53,6 +53,22 @@ def _print_table(results: EvalResults, baseline: Optional[dict]) -> None:
     print()
 
 
+def _print_offline_summary(policy: dict) -> None:
+    """Print checkpoint metadata when no sim rollouts are executed."""
+    print()
+    print("  ┌─────────────────────┬────────────────┐")
+    print("  │ Checkpoint          │ Value          │")
+    print("  ├─────────────────────┼────────────────┤")
+    print(f"  │ Condition           │ {policy['condition']:<14} │")
+    print(f"  │ Observation Dim     │ {policy['obs_dim']:>14d} │")
+    print(f"  │ Action Dim          │ {policy['action_dim']:>14d} │")
+    val_loss = policy["val_loss"]
+    val_loss_text = f"{val_loss:.6f}" if val_loss is not None else "n/a"
+    print(f"  │ Validation Loss     │ {val_loss_text:>14} │")
+    print("  └─────────────────────┴────────────────┘")
+    print()
+
+
 def main(argv: Optional[list[str]] = None) -> int:
     parser = argparse.ArgumentParser(
         prog="exokern-eval",
@@ -88,18 +104,32 @@ def main(argv: Optional[list[str]] = None) -> int:
         print(f"  Val loss: {policy['val_loss']:.6f}")
 
     baseline = None
-    if args.baseline == "auto":
-        baseline = get_baseline(args.env, condition)
-        if baseline:
-            print(f"  Baseline: EXOKERN {args.env} ({condition})")
-    elif args.baseline != "none":
-        baseline = json.loads(Path(args.baseline).read_text())
-        print(f"  Baseline: {args.baseline}")
+    report_metadata = None
 
     if args.offline:
         print("\n  OFFLINE MODE: no sim rollouts, reporting checkpoint info only.")
         results = EvalResults(condition=condition, n_episodes=0)
+        report_metadata = {
+            "mode": "offline",
+            "checkpoint": {
+                "condition": condition,
+                "obs_dim": policy["obs_dim"],
+                "action_dim": policy["action_dim"],
+                "val_loss": policy["val_loss"],
+            },
+        }
+        if args.baseline != "none":
+            print("  Baseline comparison skipped in offline mode.")
+        _print_offline_summary(policy)
     else:
+        if args.baseline == "auto":
+            baseline = get_baseline(args.env, condition)
+            if baseline:
+                print(f"  Baseline: EXOKERN {args.env} ({condition})")
+        elif args.baseline != "none":
+            baseline = json.loads(Path(args.baseline).read_text())
+            print(f"  Baseline: {args.baseline}")
+
         print(f"\n  Creating environment: {args.env}")
         env = create_env(args.env)
         if env is None:
@@ -110,15 +140,22 @@ def main(argv: Optional[list[str]] = None) -> int:
         print(f"\n  Running {args.episodes} rollouts...")
         results = run_rollouts(policy, env, args.episodes, device)
         env.close()
-
-    _print_table(results, baseline)
+        _print_table(results, baseline)
 
     output_path = Path(args.output)
     if output_path.suffix == ".json":
-        out = generate_json_report(results, args.env, baseline, output_path)
+        out = generate_json_report(
+            results, args.env, baseline, output_path, metadata=report_metadata
+        )
     else:
         out = generate_report(
-            results, args.env, policy["obs_dim"], policy["action_dim"], baseline, output_path
+            results,
+            args.env,
+            policy["obs_dim"],
+            policy["action_dim"],
+            baseline,
+            output_path,
+            metadata=report_metadata,
         )
     print(f"  Report saved: {out}")
 
@@ -128,7 +165,7 @@ def main(argv: Optional[list[str]] = None) -> int:
         else:
             gap = baseline["success_rate"] - results.success_rate
             print(f"  Your policy is {gap:.1f}% below the EXOKERN baseline.")
-            print(f"  Try the pre-trained skill: https://huggingface.co/EXOKERN/skill-forge-peginsert-v0")
+            print("  Try the pre-trained skill: https://huggingface.co/EXOKERN/skill-forge-peginsert-v0")
 
     return 0
 
